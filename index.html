@@ -237,28 +237,36 @@ let audioContext;
 let clickBuffer;
 
 async function initAudio() {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-    const response = await fetch("click.mp3");
-    const arrayBuffer = await response.arrayBuffer();
-    clickBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Si está suspendido, lo activamos
+    if (audioContext.state === "suspended") {
+        await audioContext.resume();
+    }
+
+    // Solo cargamos el mp3 una vez
+    if (!clickBuffer) {
+        const response = await fetch("click.mp3");
+        const arrayBuffer = await response.arrayBuffer();
+        clickBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    }
 }
 
-function playClick() {
-    if (!audioContext || !clickBuffer) return;
+async function playClick() {
+
+    // Si todavía no está listo, lo inicializamos
+    if (!audioContext || !clickBuffer) {
+        await initAudio();
+    }
 
     const source = audioContext.createBufferSource();
     source.buffer = clickBuffer;
     source.connect(audioContext.destination);
     source.start(0);
 }
-
-document.addEventListener("click", async () => {
-    if (!audioContext) {
-        await initAudio();
-    }
-}, { once: true });
-
 let cantidadJugadores = 4;
 let cantidadImpostores = 1;
 const MAX_JUGADORES = 24;
