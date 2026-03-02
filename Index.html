@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Juego del Espía PRO</title>
+
+<style>
+body{
+    color: white;
+    margin: 0;
+    min-height: 100vh;
+    text-align: center;
+    
+    background: linear-gradient(-45deg, #000000, #071a2f, #0b2c55, #000000);
+    background-size: 400% 400%;
+    animation: fondoAnimado 14s ease infinite;
+}
+
+@keyframes fondoAnimado{
+    0%{ background-position: 0% 50%; }
+    50%{ background-position: 100% 50%; }
+    100%{ background-position: 0% 50%; }
+}
+
+@keyframes fondoAnimado{
+    0%{ background-position: 0% 50%; }
+    50%{ background-position: 100% 50%; }
+    100%{ background-position: 0% 50%; }
+}
+.pantalla{ display:none; margin-top:20px; }
+
+button{
+    padding:12px 22px;
+    margin:10px;
+    font-size:17px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background: linear-gradient(45deg,#ff9800,#ffb74d);
+    color:white;
+    font-weight:bold;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+    transition:all 0.15s ease;
+}
+
+button:active{
+    transform:scale(0.93);
+    box-shadow:0 2px 5px rgba(0,0,0,0.3);
+}
+
+button:active{
+    transform:scale(0.93);
+    box-shadow:0 2px 5px rgba(0,0,0,0.3);
+}
+
+input, select{
+    padding:8px;
+    margin:5px;
+    border-radius:6px;
+    border:none;
+}
+
+input[type="number"]{
+    width:70px;
+    text-align:center;
+}
+
+#rolBox{
+    font-size:24px;
+    margin:25px;
+    padding:25px;
+    background:white;
+    color:black;
+    border-radius:15px;
+    display:inline-block;
+    white-space:pre-line;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
+    animation:popRol 0.4s ease;
+}
+
+@keyframes popRol{
+    from{ transform:scale(0.6); opacity:0;}
+    to{ transform:scale(1); opacity:1;}
+}
+
+#timer{ font-size:28px; margin-top:15px; }
+
+..jugadorCard{
+    background:white;
+    color:black;
+    padding:15px;
+    margin:12px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    transition:transform 0.2s;
+}
+
+.jugadorCard:hover{
+    transform:scale(1.02);
+}
+
+@keyframes victoriaAnim {
+    0% { transform: scale(0.5); opacity:0; }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity:1; }
+}
+
+.victoriaActiva{
+    animation: victoriaAnim 0.6s ease;
+}
+
+
+#turnoInicio{
+    text-align:center;
+    color:white;
+    font-size:22px;
+    opacity:0;
+    transition: opacity 1s ease;
+}
+.contenedor{
+    width: 90%;
+    max-width: 400px;
+    margin: 0 auto;   /* centra horizontal */
+    padding-top: 40px;
+}
+.fila{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+.categoriaBtn{
+    background: gray;
+}
+
+.categoriaActiva{
+    background: linear-gradient(45deg,#ff9800,#ffb74d);
+}
+</style>
+</head>
+<body>
+<div class="contenedor">
+
+<h1>🕵️ Juego del Espía</h1>
+
+<!-- CONFIG 1 -->
+<div id="config1" class="pantalla" style="display:block;">
+<h2>Cantidad</h2>
+
+Jugadores:
+<button onclick="playClick(); cambiarJugadores(-1)">-</button>
+<input type="number" id="cantidad" min="3" max="24" value="4" onblur="validarJugadores()">
+<button onclick="playClick(); cambiarJugadores(1)">+</button>
+<br><br>
+
+Impostores:
+<button onclick="playClick(); cambiarImpostores(-1)">-</button>
+<input type="number" id="cantidadImpostores" min="1" value="1" onblur="validarImpostores()">
+<button onclick="playClick(); cambiarImpostores(1)">+</button>
+
+<button onclick="playClick(); irACategorias()">Continuar</button>
+<p id="errorConfig" style="color:yellow;"></p>
+</div>
+
+<!-- CATEGORIAS -->
+<div id="configCategorias" class="pantalla">
+  <h2>Selecciona Categorías</h2>
+  <div id="listaCategorias"></div>
+  <br>
+  <button onclick="playClick(); irANombres()">Continuar</button>
+</div>
+
+<!-- CONFIG 2 -->
+<div id="config2" class="pantalla">
+<h2>Nombres de los jugadores</h2>
+<div id="nombres"></div>
+<button onclick="playClick(); iniciarJuego()">Comenzar Juego</button>
+</div>
+
+<!-- ROLES -->
+<div id="roles" class="pantalla">
+<h2 id="jugadorActual"></h2>
+<div id="rolBox">Toca para ver tu rol</div><br>
+<button id="btnVerRol" onclick="playClick(); verRol()">Ver Rol</button>
+<button onclick="playClick(); siguienteJugador()" id="btnSiguiente" style="display:none;">Siguiente</button>
+</div>
+
+<!-- PARTIDA -->
+<div id="partida" class="pantalla">
+<h2 id="turnoInicio" style="text-align:center; color:white;"></h2>
+<h2>Tiempo restante</h2>
+<div id="timer">04:00</div>
+<button onclick="playClick(); abrirVotacion()">Iniciar Votación</button>
+</div>
+
+<!-- VOTACION -->
+<div id="votacion" class="pantalla">
+<h2>Votación</h2>
+<div id="listaVotos"></div>
+<button id="btnFinalizar" onclick="playClick(); calcularResultados()">Finalizar Votación</button>
+<h3 id="resultado"></h3>
+<button id="btnSeguir" onclick="playClick(); seguirJuego()">
+    Seguir Jugando
+</button>
+</div>
+
+<script>
+
+
+let cantidadJugadores = 4;
+let cantidadImpostores = 1;
+const MAX_JUGADORES = 24;
+
+/* PALABRAS */
+let categorias = {
+  lugares: [
+{real:"Playa", pista:"Arena"},
+{real:"Montaña", pista:"Altura"},
+{real:"Escuela", pista:"Profesor"},
+{real:"Hospital", pista:"Doctor"},
+{real:"Aeropuerto", pista:"Avión"},
+{real:"Cine", pista:"Película"},
+{real:"Supermercado", pista:"Compras"},
+{real:"Restaurante", pista:"Menú"},
+{real:"Parque", pista:"Árboles"},
+{real:"Biblioteca", pista:"Libros"},
+{real:"Iglesia", pista:"Rezar"},
+{real:"Estadio", pista:"Fútbol"},
+{real:"Piscina", pista:"Agua"},
+{real:"Banco", pista:"Dinero"},
+{real:"Museo", pista:"Historia"},
+{real:"Zoológico", pista:"Animales"},
+{real:"Teatro", pista:"Actores"},
+{real:"Universidad", pista:"Carreras"},
+{real:"Farmacia", pista:"Medicinas"},
+{real:"Panadería", pista:"Pan"},
+{real:"Carnicería", pista:"Carne"},
+{real:"Heladería", pista:"Helado"},
+{real:"Discoteca", pista:"Baile"},
+{real:"Gimnasio", pista:"Ejercicio"},
+{real:"Hotel", pista:"Habitación"},
+{real:"Camping", pista:"Carpa"},
+{real:"Desierto", pista:"Arena"},
+{real:"Selva", pista:"Vegetación"},
+{real:"Isla", pista:"Mar"},
+{real:"Puente", pista:"Cruzar"},
+{real:"Autopista", pista:"Velocidad"},
+{real:"Puerto", pista:"Barcos"},
+{real:"Castillo", pista:"Rey"},
+{real:"Prisión", pista:"Rejas"},
+{real:"Laboratorio", pista:"Experimentos"},
+{real:"Oficina", pista:"Trabajo"},
+{real:"Mercado", pista:"Puestos"},
+{real:"Estación", pista:"Tren"},
+{real:"Cafetería", pista:"Café"},
+{real:"Tienda", pista:"Comprar"},
+{real:"Cancha", pista:"Juego"},
+{real:"Granja", pista:"Animales"},
+{real:"Acuario", pista:"Peces"},
+{real:"Volcán", pista:"Lava"},
+{real:"Cueva", pista:"Oscuridad"},
+{real:"Plaza", pista:"Fuente"},
+{real:"Mirador", pista:"Vista"},
+{real:"Fábrica", pista:"Producción"},
+{real:"Túnel", pista:"Subterráneo"},
+{real:"Base militar", pista:"Soldados"}
+],
+comida: [
+{real:"Pizza", pista:"Queso"},
+{real:"Hamburguesa", pista:"Carne"},
+{real:"Milanesa", pista:"Empanado"},
+{real:"Empanada", pista:"Relleno"},
+{real:"Taco", pista:"México"},
+{real:"Sushi", pista:"Arroz"},
+{real:"Ramen", pista:"Fideos"},
+{real:"Ensalada", pista:"Verduras"},
+{real:"Sandwich", pista:"Pan"},
+{real:"Pancho", pista:"Salchicha"},
+{real:"Asado", pista:"Parrilla"},
+{real:"Galletitas", pista:"Dulce"},
+{real:"Chocolate", pista:"Cacao"},
+{real:"Caramelo", pista:"Azúcar"},
+{real:"Torta", pista:"Cumpleaños"},
+{real:"Budín", pista:"Postre"},
+{real:"Flan", pista:"Caramelo"},
+{real:"Gelatina", pista:"Colores"},
+{real:"Helado", pista:"Frío"},
+{real:"Yogur", pista:"Lácteo"},
+{real:"Arroz", pista:"Blanco"},
+{real:"Fideos", pista:"Pasta"},
+{real:"Pollo", pista:"Ave"},
+{real:"Carne", pista:"Roja"},
+{real:"Pescado", pista:"Mar"},
+{real:"Sopa", pista:"Caliente"},
+{real:"Cereal", pista:"Desayuno"},
+{real:"Pan", pista:"Horno"},
+{real:"Queso", pista:"Lácteo"},
+{real:"Jamón", pista:"Fiambre"},
+{real:"Salchicha", pista:"Pancho"},
+{real:"Tostada", pista:"Desayuno"},
+{real:"Mermelada", pista:"Fruta"},
+{real:"Manteca", pista:"Untar"},
+{real:"Huevo", pista:"Gallina"},
+{real:"Puré", pista:"Papa"},
+{real:"Papa frita", pista:"Aceite"},
+{real:"Lentejas", pista:"Legumbre"},
+{real:"Manzana", pista:"Fruta"},
+{real:"Banana", pista:"Amarilla"},
+{real:"Naranja", pista:"Cítrica"},
+{real:"Frutilla", pista:"Roja"},
+{real:"Uva", pista:"Racimo"},
+{real:"Sandía", pista:"Verano"},
+{real:"Melón", pista:"Dulce"},
+{real:"Ananá", pista:"Tropical"},
+{real:"Kiwi", pista:"Verde"},
+{real:"Café", pista:"Energía"},
+{real:"Té", pista:"Infusión"},
+{real:"Limonada", pista:"Ácida"}
+],
+casa: [
+{real:"Mesa", pista:"Comer"},
+{real:"Silla", pista:"Sentarse"},
+{real:"Sofá", pista:"Living"},
+{real:"Cama", pista:"Dormir"},
+{real:"Almohada", pista:"Cabeza"},
+{real:"Manta", pista:"Abrigo"},
+{real:"Heladera", pista:"Frío"},
+{real:"Microondas", pista:"Calentar"},
+{real:"Horno", pista:"Cocinar"},
+{real:"Cocina", pista:"Gas"},
+{real:"Plato", pista:"Comida"},
+{real:"Vaso", pista:"Beber"},
+{real:"Taza", pista:"Café"},
+{real:"Cuchara", pista:"Sopa"},
+{real:"Tenedor", pista:"Pinchar"},
+{real:"Cuchillo", pista:"Cortar"},
+{real:"Lavarropas", pista:"Ropa"},
+{real:"Escoba", pista:"Barrer"},
+{real:"Trapeador", pista:"Piso"},
+{real:"Ventilador", pista:"Aire"},
+{real:"Aire acondicionado", pista:"Frío"},
+{real:"Televisión", pista:"Canales"},
+{real:"Control remoto", pista:"Botones"},
+{real:"Espejo", pista:"Reflejo"},
+{real:"Placard", pista:"Ropa"},
+{real:"Cajón", pista:"Guardar"},
+{real:"Puerta", pista:"Entrar"},
+{real:"Ventana", pista:"Luz"},
+{real:"Cortina", pista:"Tapar"},
+{real:"Alfombra", pista:"Piso"},
+{real:"Lámpara", pista:"Luz"},
+{real:"Bombilla", pista:"Iluminar"},
+{real:"Interruptor", pista:"Encender"},
+{real:"Enchufe", pista:"Electricidad"},
+{real:"Cable", pista:"Conectar"},
+{real:"WiFi", pista:"Internet"},
+{real:"Router", pista:"Señal"},
+{real:"Notebook", pista:"Portátil"},
+{real:"Escritorio", pista:"Estudiar"},
+{real:"Sillón", pista:"Descansar"},
+{real:"Estantería", pista:"Libros"},
+{real:"Reloj", pista:"Hora"},
+{real:"Calendario", pista:"Fecha"},
+{real:"Llave", pista:"Abrir"},
+{real:"Candado", pista:"Cerrar"},
+{real:"Balde", pista:"Agua"},
+{real:"Detergente", pista:"Lavar"},
+{real:"Jabón", pista:"Espuma"},
+{real:"Shampoo", pista:"Cabello"},
+{real:"Toalla", pista:"Secar"}
+],
+anime: [
+{real:"Naruto", pista:"Zorro"},
+{real:"Sasuke", pista:"Sharingan"},
+{real:"Sakura", pista:"Fuerza"},
+{real:"Kakashi", pista:"Máscara"},
+{real:"Itachi", pista:"Cuervo"},
+{real:"Hinata", pista:"Byakugan"},
+{real:"Gaara", pista:"Arena"},
+{real:"Jiraiya", pista:"Sapo"},
+{real:"Orochimaru", pista:"Serpiente"},
+{real:"Tsunade", pista:"Curación"},
+{real:"Luffy", pista:"Goma"},
+{real:"Zoro", pista:"Espadas"},
+{real:"Nami", pista:"Clima"},
+{real:"Sanji", pista:"Cocina"},
+{real:"Usopp", pista:"Mentiras"},
+{real:"Chopper", pista:"Doctor"},
+{real:"Robin", pista:"Historia"},
+{real:"Franky", pista:"Cyborg"},
+{real:"Brook", pista:"Esqueleto"},
+{real:"Jinbe", pista:"Tiburón"},
+{real:"Goku", pista:"Saiyajin"},
+{real:"Vegeta", pista:"Orgullo"},
+{real:"Gohan", pista:"Híbrido"},
+{real:"Piccolo", pista:"Namek"},
+{real:"Freezer", pista:"Villano"},
+{real:"Ichigo", pista:"Shinigami"},
+{real:"Lelouch", pista:"Geass"},
+{real:"Eren", pista:"Titán"},
+{real:"Mikasa", pista:"Bufanda"},
+{real:"Levi", pista:"Capitán"},
+{real:"Light", pista:"Cuaderno"},
+{real:"L", pista:"Detective"},
+{real:"Tanjiro", pista:"Demonio"},
+{real:"Nezuko", pista:"Caja"},
+{real:"Inosuke", pista:"Máscara"},
+{real:"Zenitsu", pista:"Rayo"},
+{real:"Saitama", pista:"Puñetazo"},
+{real:"Genos", pista:"Cyborg"},
+{real:"Edward Elric", pista:"Alquimia"},
+{real:"Alphonse", pista:"Armadura"},
+{real:"Killua", pista:"Electricidad"},
+{real:"Gon", pista:"Cazador"},
+{real:"Hisoka", pista:"Cartas"},
+{real:"All Might", pista:"Héroe"},
+{real:"Deku", pista:"Quirk"},
+{real:"Bakugo", pista:"Explosión"},
+{real:"Todoroki", pista:"Hielo"},
+{real:"Asta", pista:"Antimagia"},
+{real:"Natsu", pista:"Dragón"},
+{real:"Erza", pista:"Armadura"}
+],
+videojuegos: [
+{real:"Minecraft", pista:"Bloques"},
+{real:"Fortnite", pista:"Construir"},
+{real:"Free Fire", pista:"Battle"},
+{real:"Roblox", pista:"Mundos"},
+{real:"Among Us", pista:"Impostor"},
+{real:"GTA", pista:"Ciudad"},
+{real:"Call of Duty", pista:"Disparos"},
+{real:"FIFA", pista:"Fútbol"},
+{real:"PES", pista:"Balón"},
+{real:"Mario", pista:"Bigote"},
+{real:"Luigi", pista:"Verde"},
+{real:"Zelda", pista:"Trifuerza"},
+{real:"Link", pista:"Espada"},
+{real:"Sonic", pista:"Velocidad"},
+{real:"Pokémon", pista:"Criaturas"},
+{real:"Pikachu", pista:"Electricidad"},
+{real:"Clash Royale", pista:"Cartas"},
+{real:"Clash of Clans", pista:"Aldeas"},
+{real:"Brawl Stars", pista:"Brawlers"},
+{real:"Valorant", pista:"Agentes"},
+{real:"League of Legends", pista:"Campeones"},
+{real:"Dota", pista:"Ancient"},
+{real:"Overwatch", pista:"Héroes"},
+{real:"Apex Legends", pista:"Escuadras"},
+{real:"Counter Strike", pista:"Bombas"},
+{real:"Resident Evil", pista:"Zombies"},
+{real:"The Last of Us", pista:"Infectados"},
+{real:"God of War", pista:"Kratos"},
+{real:"Elden Ring", pista:"Anillo"},
+{real:"Dark Souls", pista:"Difícil"},
+{real:"Hollow Knight", pista:"Insecto"},
+{real:"Cuphead", pista:"Dibujo"},
+{real:"Terraria", pista:"Explorar"},
+{real:"Undertale", pista:"Pacifista"},
+{real:"Five Nights", pista:"Animatrónicos"},
+{real:"Fall Guys", pista:"Obstáculos"},
+{real:"Rocket League", pista:"Autos"},
+{real:"Subway Surfers", pista:"Correr"},
+{real:"Temple Run", pista:"Huida"},
+{real:"Geometry Dash", pista:"Ritmo"},
+{real:"Plants vs Zombies", pista:"Plantas"},
+{real:"Halo", pista:"Espacial"},
+{real:"Skyrim", pista:"Dragones"},
+{real:"Cyberpunk", pista:"Futuro"},
+{real:"Red Dead", pista:"Vaquero"},
+{real:"Assassin's Creed", pista:"Sigilo"},
+{real:"The Witcher", pista:"Monstruos"},
+{real:"Metroid", pista:"Cazarrecompensas"},
+{real:"Street Fighter", pista:"Combate"},
+{real:"Mortal Kombat", pista:"Fatality"}
+],
+profesiones: [
+{real:"Profesor", pista:"Clase"},
+{real:"Doctor", pista:"Paciente"},
+{real:"Enfermero", pista:"Hospital"},
+{real:"Policía", pista:"Ley"},
+{real:"Bombero", pista:"Fuego"},
+{real:"Chef", pista:"Cocina"},
+{real:"Arquitecto", pista:"Planos"},
+{real:"Ingeniero", pista:"Diseño"},
+{real:"Programador", pista:"Código"},
+{real:"Carpintero", pista:"Madera"},
+{real:"Electricista", pista:"Cables"},
+{real:"Mecánico", pista:"Motor"},
+{real:"Piloto", pista:"Avión"},
+{real:"Azafata", pista:"Vuelo"},
+{real:"Capitán", pista:"Barco"},
+{real:"Actor", pista:"Película"},
+{real:"Cantante", pista:"Micrófono"},
+{real:"Pintor", pista:"Cuadro"},
+{real:"Periodista", pista:"Noticias"},
+{real:"Abogado", pista:"Juicio"},
+{real:"Veterinario", pista:"Mascotas"},
+{real:"Panadero", pista:"Pan"},
+{real:"Carnicero", pista:"Carne"},
+{real:"Dentista", pista:"Dientes"},
+{real:"Psicólogo", pista:"Mente"},
+{real:"Entrenador", pista:"Deporte"},
+{real:"Soldado", pista:"Ejército"},
+{real:"Astronauta", pista:"Espacio"},
+{real:"Científico", pista:"Laboratorio"},
+{real:"Fotógrafo", pista:"Cámara"},
+{real:"Diseñador", pista:"Creatividad"},
+{real:"Taxista", pista:"Pasajero"},
+{real:"Chofer", pista:"Transporte"},
+{real:"Albañil", pista:"Construcción"},
+{real:"Jardinero", pista:"Plantas"},
+{real:"Barbero", pista:"Corte"},
+{real:"Peluquero", pista:"Cabello"},
+{real:"Actor de doblaje", pista:"Voz"},
+{real:"Streamer", pista:"Directo"},
+{real:"Youtuber", pista:"Videos"},
+{real:"Influencer", pista:"Redes"},
+{real:"Guardia", pista:"Seguridad"},
+{real:"Recepcionista", pista:"Hotel"},
+{real:"Secretario", pista:"Oficina"},
+{real:"Camarero", pista:"Restaurante"},
+{real:"Repartidor", pista:"Entrega"},
+{real:"Explorador", pista:"Aventura"},
+{real:"Detective", pista:"Pistas"},
+{real:"Juez", pista:"Sentencia"},
+{real:"Diputado", pista:"Congreso"}
+],
+naturaleza: [
+{real:"Río", pista:"Agua"},
+{real:"Lago", pista:"Agua"},
+{real:"Mar", pista:"Olas"},
+{real:"Océano", pista:"Profundo"},
+{real:"Cielo", pista:"Nubes"},
+{real:"Sol", pista:"Día"},
+{real:"Luna", pista:"Noche"},
+{real:"Estrella", pista:"Brilla"},
+{real:"Planeta", pista:"Espacio"},
+{real:"Cometa", pista:"Cola"},
+{real:"Tormenta", pista:"Trueno"},
+{real:"Huracán", pista:"Viento"},
+{real:"Relámpago", pista:"Electricidad"},
+{real:"Nieve", pista:"Blanco"},
+{real:"Hielo", pista:"Frío"},
+{real:"Volcán", pista:"Lava"},
+{real:"Montaña", pista:"Altura"},
+{real:"Valle", pista:"Entre montañas"},
+{real:"Pantano", pista:"Barro"},
+{real:"Laguna", pista:"Pequeña"},
+{real:"Arrecife", pista:"Coral"},
+{real:"Marea", pista:"Sube"},
+{real:"Oleaje", pista:"Movimiento"},
+{real:"Corriente", pista:"Fluir"},
+{real:"Granizo", pista:"Bolas de hielo"},
+{real:"Arcoíris", pista:"Colores"},
+{real:"Rocío", pista:"Mañana"},
+{real:"Nube", pista:"Cielo"},
+{real:"Flor", pista:"Pétalos"},
+{real:"Hoja", pista:"Árbol"},
+{real:"Raíz", pista:"Tierra"},
+{real:"Semilla", pista:"Crecer"},
+{real:"Tronco", pista:"Madera"},
+{real:"Arena", pista:"Playa"},
+{real:"Roca", pista:"Dura"},
+{real:"Desierto", pista:"Seco"},
+{real:"Selva", pista:"Húmeda"},
+{real:"Bosque", pista:"Árboles"},
+{real:"Pradera", pista:"Hierba"},
+{real:"Cascada", pista:"Caída"},
+{real:"Glaciar", pista:"Hielo"},
+{real:"Cuevas", pista:"Oscuras"},
+{real:"Tornado", pista:"Remolino"},
+{real:"Neblina", pista:"Bruma"},
+{real:"Viento", pista:"Aire"},
+{real:"Lluvia", pista:"Gotas"},
+{real:"Trueno", pista:"Ruido"},
+{real:"Eclipse", pista:"Sombra"},
+{real:"Constelación", pista:"Estrellas"},
+{real:"Galaxia", pista:"Universo"}
+],
+deportes: [
+{real:"Fútbol", pista:"Pelota"},
+{real:"Básquet", pista:"Aro"},
+{real:"Tenis", pista:"Raqueta"},
+{real:"Vóley", pista:"Red"},
+{real:"Rugby", pista:"Ovalada"},
+{real:"Hockey", pista:"Stick"},
+{real:"Natación", pista:"Piscina"},
+{real:"Boxeo", pista:"Guantes"},
+{real:"Karate", pista:"Cinturón"},
+{real:"Judo", pista:"Llave"},
+{real:"Taekwondo", pista:"Patada"},
+{real:"Atletismo", pista:"Correr"},
+{real:"Ciclismo", pista:"Bicicleta"},
+{real:"Skate", pista:"Tabla"},
+{real:"Surf", pista:"Olas"},
+{real:"Snowboard", pista:"Nieve"},
+{real:"Esquí", pista:"Montaña"},
+{real:"Golf", pista:"Hoyo"},
+{real:"Ping pong", pista:"Paleta"},
+{real:"Ajedrez", pista:"Rey"},
+{real:"Handball", pista:"Mano"},
+{real:"Beisbol", pista:"Bate"},
+{real:"Softbol", pista:"Diamante"},
+{real:"Automovilismo", pista:"Carrera"},
+{real:"Motocross", pista:"Moto"},
+{real:"Escalada", pista:"Roca"},
+{real:"Gimnasia", pista:"Flexibilidad"},
+{real:"Patinaje", pista:"Ruedas"},
+{real:"Lucha libre", pista:"Máscara"},
+{real:"Arquería", pista:"Flecha"},
+{real:"Remo", pista:"Bote"},
+{real:"Vela", pista:"Barco"},
+{real:"Triatlón", pista:"Tres deportes"},
+{real:"Maratón", pista:"42km"},
+{real:"Parkour", pista:"Saltos"},
+{real:"BMX", pista:"Trucos"},
+{real:"Polo", pista:"Caballo"},
+{real:"Críquet", pista:"Bate"},
+{real:"Esgrima", pista:"Espada"},
+{real:"Sumo", pista:"Empujar"},
+{real:"Waterpolo", pista:"Agua"},
+{real:"Halterofilia", pista:"Pesas"},
+{real:"Crossfit", pista:"Intenso"},
+{real:"Paintball", pista:"Disparos"},
+{real:"Bowling", pista:"Boliche"},
+{real:"Dardos", pista:"Puntería"},
+{real:"Paracaidismo", pista:"Caída"},
+{real:"Escalada indoor", pista:"Muro"},
+{real:"Futsal", pista:"Cancha chica"},
+{real:"Bádminton", pista:"Pluma"}
+],
+tecnologia: [
+{real:"Computadora", pista:"Pantalla"},
+{real:"Celular", pista:"Llamadas"},
+{real:"Tablet", pista:"Táctil"},
+{real:"Notebook", pista:"Portátil"},
+{real:"Teclado", pista:"Escribir"},
+{real:"Mouse", pista:"Cursor"},
+{real:"Monitor", pista:"Imagen"},
+{real:"Impresora", pista:"Papel"},
+{real:"Auriculares", pista:"Sonido"},
+{real:"Parlante", pista:"Audio"},
+{real:"Micrófono", pista:"Voz"},
+{real:"Cámara", pista:"Foto"},
+{real:"Router", pista:"Internet"},
+{real:"WiFi", pista:"Señal"},
+{real:"Bluetooth", pista:"Conexión"},
+{real:"USB", pista:"Puerto"},
+{real:"Disco duro", pista:"Almacenamiento"},
+{real:"Memoria RAM", pista:"Velocidad"},
+{real:"Procesador", pista:"Cerebro"},
+{real:"Tarjeta gráfica", pista:"Video"},
+{real:"Consola", pista:"Jugar"},
+{real:"Control", pista:"Botones"},
+{real:"Joystick", pista:"Mover"},
+{real:"Realidad virtual", pista:"Gafas"},
+{real:"Inteligencia artificial", pista:"Algoritmo"},
+{real:"Robot", pista:"Automático"},
+{real:"Drone", pista:"Volar"},
+{real:"Satélite", pista:"Órbita"},
+{real:"Servidor", pista:"Red"},
+{real:"Nube", pista:"Datos"},
+{real:"Aplicación", pista:"App"},
+{real:"Página web", pista:"Internet"},
+{real:"Código", pista:"Programar"},
+{real:"Virus", pista:"Malware"},
+{real:"Antivirus", pista:"Protección"},
+{real:"Firewall", pista:"Seguridad"},
+{real:"Batería", pista:"Energía"},
+{real:"Pantalla táctil", pista:"Toque"},
+{real:"Smartwatch", pista:"Reloj"},
+{real:"Impresora 3D", pista:"Plástico"},
+{real:"Cable HDMI", pista:"Video"},
+{real:"Proyector", pista:"Imagen grande"},
+{real:"Chip", pista:"Electrónico"},
+{real:"Sensor", pista:"Detectar"},
+{real:"Base de datos", pista:"Información"},
+{real:"Algoritmo", pista:"Secuencia"},
+{real:"Streaming", pista:"En vivo"},
+{real:"Red social", pista:"Perfil"},
+{real:"Servidor web", pista:"Hosting"},
+{real:"Actualización", pista:"Versión"}
+],
+ropa: [
+{real:"Remera", pista:"Mangas"},
+{real:"Camisa", pista:"Botones"},
+{real:"Pantalón", pista:"Piernas"},
+{real:"Short", pista:"Corto"},
+{real:"Bermuda", pista:"Verano"},
+{real:"Campera", pista:"Abrigo"},
+{real:"Buzo", pista:"Capucha"},
+{real:"Saco", pista:"Formal"},
+{real:"Vestido", pista:"Falda"},
+{real:"Falda", pista:"Pliegues"},
+{real:"Medias", pista:"Pies"},
+{real:"Zapatillas", pista:"Cordones"},
+{real:"Zapatos", pista:"Elegantes"},
+{real:"Botas", pista:"Invierno"},
+{real:"Sandalias", pista:"Abiertas"},
+{real:"Ojotas", pista:"Playa"},
+{real:"Gorra", pista:"Visera"},
+{real:"Sombrero", pista:"Cabeza"},
+{real:"Bufanda", pista:"Cuello"},
+{real:"Guantes", pista:"Manos"},
+{real:"Cinturón", pista:"Ajustar"},
+{real:"Corbata", pista:"Formal"},
+{real:"Pijama", pista:"Dormir"},
+{real:"Ropa interior", pista:"Debajo"},
+{real:"Traje", pista:"Elegante"},
+{real:"Traje de baño", pista:"Piscina"},
+{real:"Chaqueta", pista:"Abrigo"},
+{real:"Chaleco", pista:"Sin mangas"},
+{real:"Top", pista:"Corto"},
+{real:"Leggings", pista:"Ajustado"},
+{real:"Jeans", pista:"Denim"},
+{real:"Campera de cuero", pista:"Moto"},
+{real:"Impermeable", pista:"Lluvia"},
+{real:"Piloto", pista:"Agua"},
+{real:"Pañuelo", pista:"Cuello"},
+{real:"Pulsera", pista:"Muñeca"},
+{real:"Collar", pista:"Cuello"},
+{real:"Anillo", pista:"Dedo"},
+{real:"Aros", pista:"Orejas"},
+{real:"Reloj", pista:"Hora"},
+{real:"Mochila", pista:"Espalda"},
+{real:"Bolso", pista:"Guardar"},
+{real:"Maleta", pista:"Viaje"},
+{real:"Uniforme", pista:"Trabajo"},
+{real:"Delantal", pista:"Cocina"},
+{real:"Campera deportiva", pista:"Entrenar"},
+{real:"Bata", pista:"Casa"},
+{real:"Pantuflas", pista:"Interior"},
+{real:"Poncho", pista:"Tradicional"},
+{real:"Chal", pista:"Hombros"}
+]
+};
+let palabraReal="";
+let palabraPista="";
+let categoriasActivas = [];
+
+let jugadores=[];
+let impostores=[];
+let civiles=[];
+let indiceJugador=0;
+let tiempo=240;
+let intervalo;
+let juegoTerminado=false;
+
+/* ===== CONTROL JUGADORES ===== */
+
+function cambiarJugadores(valor){
+    let input = document.getElementById("cantidad");
+    let numero = Number(input.value);
+
+    if (!numero) numero = 3;
+
+    numero += valor;
+
+    if (numero < 3) numero = 3;
+    if (numero > 24) numero = 24;
+
+    input.value = numero;
+
+    validarImpostores();
+}
+
+function validarJugadores(){
+    let input = document.getElementById("cantidad");
+    let numero = Number(input.value);
+
+    if (!numero || numero < 3) numero = 3;
+    if (numero > 24) numero = 24;
+
+    input.value = numero;
+
+    validarImpostores();
+}
+
+/* ===== CONTROL IMPOSTORES ===== */
+
+function cambiarImpostores(valor){
+    let input = document.getElementById("cantidadImpostores");
+    let jugadores = Number(document.getElementById("cantidad").value);
+    let numero = Number(input.value);
+
+    if (!numero) numero = 1;
+
+    numero += valor;
+
+    let maxImp = Math.floor((jugadores - 1) / 2);
+    if (maxImp < 1) maxImp = 1;
+
+    if (numero < 1) numero = 1;
+    if (numero > maxImp) numero = maxImp;
+
+    input.value = numero;
+}
+
+function validarImpostores(){
+    let input = document.getElementById("cantidadImpostores");
+    let jugadores = Number(document.getElementById("cantidad").value);
+    let numero = Number(input.value);
+
+    let maxImp = Math.floor((jugadores - 1) / 2);
+    if (maxImp < 1) maxImp = 1;
+
+    if (!numero || numero < 1) numero = 1;
+    if (numero > maxImp) numero = maxImp;
+
+    input.value = numero;
+}
+function irACategorias(){
+
+    document.getElementById("config1").style.display="none";
+    document.getElementById("configCategorias").style.display="block";
+
+    let cont = document.getElementById("listaCategorias");
+    cont.innerHTML = "";
+
+    categoriasActivas = [];
+
+    for(let nombre in categorias){
+
+        let btn = document.createElement("button");
+        btn.innerText = nombre;
+        btn.classList.add("categoriaBtn");
+
+        btn.onclick = function(){
+            toggleCategoria(nombre, btn);
+        };
+
+        cont.appendChild(btn);
+    }
+}
+
+function toggleCategoria(nombre, boton){
+
+    if(categoriasActivas.includes(nombre)){
+
+        categoriasActivas =
+            categoriasActivas.filter(c => c !== nombre);
+
+        boton.classList.remove("categoriaActiva");
+        boton.classList.add("categoriaBtn");
+
+    }else{
+
+        categoriasActivas.push(nombre);
+
+        boton.classList.remove("categoriaBtn");
+        boton.classList.add("categoriaActiva");
+    }
+
+}
+
+/* IR A NOMBRES */
+function irANombres(){
+
+    document.getElementById("configCategorias").style.display="none";
+
+    let cantidad = parseInt(document.getElementById("cantidad").value);
+    let cantImp = parseInt(document.getElementById("cantidadImpostores").value);
+
+    if(cantImp>=cantidad-cantImp){
+        error.innerText="Los impostores deben ser menos que los civiles.";
+        return;
+    }
+
+    document.getElementById("config1").style.display="none";
+    document.getElementById("config2").style.display="block";
+
+    let cont=document.getElementById("nombres");
+    cont.innerHTML="";
+
+    for(let i=0;i<cantidad;i++){
+        cont.innerHTML+=`<input type="text" placeholder="Nombre jugador ${i+1}" id="nombre${i}"><br>`;
+    }
+}
+
+/* INICIAR JUEGO */
+function iniciarJuego(){
+
+    detenerMusica();
+
+    let cantidad = parseInt(document.getElementById("cantidad").value);
+    let cantImp = parseInt(document.getElementById("cantidadImpostores").value);
+  
+
+    jugadores=[];
+    impostores=[];
+    civiles=[];
+    juegoTerminado=false;
+    tiempo=240;
+
+let todasLasPalabras = [];
+
+// Si no eligieron ninguna, usar todas
+if(categoriasActivas.length === 0){
+
+    for (let nombre in categorias) {
+        todasLasPalabras =
+            todasLasPalabras.concat(categorias[nombre]);
+    }
+
+}else{
+
+    categoriasActivas.forEach(nombre=>{
+        todasLasPalabras =
+            todasLasPalabras.concat(categorias[nombre]);
+    });
+
+}
+let randomCat = todasLasPalabras[
+    Math.floor(Math.random() * todasLasPalabras.length)
+];
+    palabraReal=randomCat.real;
+    palabraPista=randomCat.pista;
+
+    for(let i=0;i<cantidad;i++){
+        let nombre=document.getElementById("nombre"+i).value||"Jugador "+(i+1);
+        jugadores.push({nombre:nombre,vivo:true});
+    }
+
+    while(impostores.length<cantImp){
+        let r=Math.floor(Math.random()*cantidad);
+        if(!impostores.includes(r)){
+            impostores.push(r);
+        }
+    }
+
+    civiles=jugadores.map((_,i)=>i).filter(i=>!impostores.includes(i));
+
+    document.getElementById("config2").style.display="none";
+    document.getElementById("roles").style.display="block";
+
+    indiceJugador=0;
+    mostrarJugador();
+}
+
+function mostrarJugador(){
+    document.getElementById("jugadorActual").innerText=jugadores[indiceJugador].nombre;
+    document.getElementById("rolBox").innerText="Toca para ver tu rol";
+    document.getElementById("btnVerRol").style.display="inline-block";
+    document.getElementById("btnSiguiente").style.display="none";
+}
+
+function verRol(){
+    if(impostores.includes(indiceJugador)){
+        document.getElementById("rolBox").innerText="Eres IMPOSTOR 😈\nPalabra: "+palabraPista;
+    } else {
+        document.getElementById("rolBox").innerText="Eres CIVIL 😀\nPalabra: "+palabraReal;
+    }
+
+    document.getElementById("btnVerRol").style.display="none";
+    document.getElementById("btnSiguiente").style.display="inline-block";
+}
+
+function siguienteJugador(){
+    indiceJugador++;
+    if(indiceJugador>=jugadores.length){
+        document.getElementById("roles").style.display="none";
+        document.getElementById("partida").style.display="block";
+        elegirCivilQueEmpieza();
+        iniciarMusica();
+        iniciarTimer();
+    } else {
+        mostrarJugador();
+    }
+}
+
+/* TIMER */
+function iniciarTimer(){
+    actualizarTimer();
+    intervalo=setInterval(()=>{
+        if(tiempo<=0){
+            clearInterval(intervalo);
+            abrirVotacion();
+        } else{
+            tiempo--;
+            actualizarTimer();
+        }
+    },1000);
+}
+
+function actualizarTimer(){
+    let min=Math.floor(tiempo/60);
+    let seg=tiempo%60;
+
+    document.getElementById("timer").innerText=
+    (min<10?"0":"")+min+":"+(seg<10?"0":"")+seg;
+
+    if(tiempo<=30){
+        document.getElementById("timer").style.color="red";
+    } else{
+        document.getElementById("timer").style.color="white";
+    }
+}
+
+/* VOTACION */
+function abrirVotacion(){
+
+    clearInterval(intervalo);
+    document.getElementById("partida").style.display="none";
+    document.getElementById("votacion").style.display="block";
+
+    document.getElementById("resultado").innerText="";
+
+    let lista=document.getElementById("listaVotos");
+    lista.innerHTML="";
+  
+  document.getElementById("btnFinalizar").style.display = "inline-block";
+
+    jugadores.forEach((j,i)=>{
+        if(j.vivo){
+            lista.innerHTML+=`
+            <div class="jugadorCard">
+                <b>${j.nombre}</b><br>
+                <select id="voto${i}">
+                    <option value="nadie">Nadie</option>
+                    ${jugadores.map((j2,k)=> 
+                        j2.vivo && k!==i ? `<option value="${k}">${j2.nombre}</option>`:""
+                    ).join("")}
+                </select>
+            </div>`;
+        }
+    });
+}
+
+/* RESULTADOS */
+function calcularResultados(){
+
+  document.getElementById("btnFinalizar").style.display = "none";
+  
+    let conteo={};
+
+    jugadores.forEach((j,i)=>{
+        if(j.vivo){
+            let voto=document.getElementById("voto"+i).value;
+            conteo[voto]=(conteo[voto]||0)+1;
+        }
+    });
+
+    let maxVotos=0;
+    let ganador=null;
+    let empate=false;
+
+    for(let opcion in conteo){
+        if(conteo[opcion]>maxVotos){
+            maxVotos=conteo[opcion];
+            ganador=opcion;
+            empate=false;
+        } else if(conteo[opcion]===maxVotos){
+            empate=true;
+        }
+    }
+
+    let resultado=document.getElementById("resultado");
+
+    if(empate){
+        resultado.innerText="EMPATE. Nadie eliminado.";
+    }
+    else if(ganador==="nadie"){
+        resultado.innerText="La mayoría votó NADIE.";
+    }
+    else{
+        jugadores[ganador].vivo=false;
+        if(impostores.includes(parseInt(ganador))){
+            resultado.innerText=jugadores[ganador].nombre+" era IMPOSTOR 😈";
+        } else{
+            resultado.innerText=jugadores[ganador].nombre+" era CIVIL 😀";
+        }
+    }
+
+    verificarFin();
+}
+
+function verificarFin(){  
+
+    let vivosImp = impostores.filter(i => jugadores[i].vivo).length;  
+    let vivosCiv = civiles.filter(i => jugadores[i].vivo).length;  
+
+    if(vivosImp === 0){
+
+        playVictoria()
+
+
+        let nombresCiviles = civiles.map(i => jugadores[i].nombre).join(", ");
+
+        document.getElementById("resultado").innerText += 
+        "\n🎉 GANAN LOS CIVILES" +
+        "\nCiviles: " + nombresCiviles +
+        "\nPalabra: " + palabraReal;
+
+        juegoTerminado = true;  
+        document.getElementById("votacion").classList.add("victoriaActiva");  
+        document.getElementById("btnSeguir").innerText = "Nueva Partida";
+    }  
+
+    else if(
+        vivosImp > vivosCiv || 
+        (vivosImp === 1 && vivosCiv === 1)
+    ){ 
+
+        playDerrota()
+
+    
+
+        let nombresImpostores = impostores.map(i => jugadores[i].nombre).join(", ");
+
+        document.getElementById("resultado").innerText += 
+        "\n😈 GANAN LOS IMPOSTORES" +
+        "\nImpostores: " + nombresImpostores +
+        "\nPalabra real: " + palabraReal;
+
+        juegoTerminado = true;   
+        document.getElementById("votacion").classList.add("victoriaActiva");
+  
+        document.getElementById("btnSeguir").innerText = "Nueva Partida";
+    }  
+
+    document.getElementById("resultado").innerText += 
+    "\nImpostores restantes: " + vivosImp;  
+}
+  
+function seguirJuego(){  
+    if(juegoTerminado){  
+        location.reload();  
+        return;  
+    }  
+    document.getElementById("votacion").style.display="none";  
+    document.getElementById("partida").style.display="block";  
+    iniciarTimer();  
+}  
+
+  function elegirCivilQueEmpieza(){
+
+    let civilesVivos = civiles.filter(i => jugadores[i].vivo);
+    if(civilesVivos.length === 0) return;
+
+    let indiceRandom = Math.floor(Math.random() * civilesVivos.length);
+    let jugadorQueEmpieza = civilesVivos[indiceRandom];
+
+    let elemento = document.getElementById("turnoInicio");
+
+    elemento.innerHTML =
+        "🎤 <b>Empieza hablando:</b><br>" +
+        jugadores[jugadorQueEmpieza].nombre;
+
+    // Forzar visible
+    elemento.style.opacity = "1";
+
+    // Después de 4 segundos empieza a desvanecerse
+    setTimeout(()=>{
+        elemento.style.opacity = "0";
+
+        // Después de que termina la transición lo borramos
+        setTimeout(()=>{
+            elemento.innerHTML="";
+        },1000);
+
+    },4000);
+}
+
+
+function playClick(){
+    const audio = document.getElementById("clickSound");
+    audio.currentTime = 0;
+    audio.play();
+}
+
+function playVictoria(){
+    const audio = document.getElementById("victoriaSound");
+    audio.currentTime = 0;
+    audio.play();
+}
+
+function playDerrota(){
+    const audio = document.getElementById("derrotaSound");
+    audio.currentTime = 0;
+    audio.play();
+}
+
+function playBien(){
+    const audio = document.getElementById("victoriaSound");
+    audio.currentTime = 0;
+    audio.play();
+}
+
+function playMal(){
+    const audio = document.getElementById("derrotaSound");
+    audio.currentTime = 0;
+    audio.play();
+}
+
+function iniciarMusica(){
+    const musica = document.getElementById("musicaFondo");
+    musica.volume = 0.4; // volumen 40%
+    musica.play();
+}
+
+function detenerMusica(){
+    const musica = document.getElementById("musicaFondo");
+    musica.pause();
+    musica.currentTime = 0; // vuelve al inicio
+}
+</script> 
+<audio id="clickSound" src="click.mp3" preload="auto"></audio>
+<audio id="victoriaSound" src="victoria.mp3" preload="auto"></audio>
+<audio id="derrotaSound" src="derrota.mp3" preload="auto"></audio>
+<audio id="bienSound" src="bien.mp3" preload="auto"></audio>
+<audio id="malSound" src="mal.mp3" preload="auto"></audio> 
+<audio id="musicaFondo" src="fondo.mp3" preload="auto"></audio>
+</div>
+</body>  
+</html>
