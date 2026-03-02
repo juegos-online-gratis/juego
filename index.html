@@ -1234,6 +1234,28 @@ function cerrarBeta(){
     document.getElementById("config1").style.display="block";
 
 }
+/* ===== OPTIMIZAR AUDIO ANDROID ===== */
+
+window.addEventListener("load", () => {
+
+    const sonidos = [
+        document.getElementById("clickSound"),
+        document.getElementById("victoriaSound"),
+        document.getElementById("derrotaSound"),
+        document.getElementById("musicaFondo")
+    ];
+
+    sonidos.forEach(audio => {
+        audio.load(); // fuerza precarga
+
+        // pequeño truco para "despertar" el audio
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }).catch(() => {});
+    });
+
+});
 </script> 
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 <audio id="victoriaSound" src="victoria.mp3" preload="auto"></audio>
