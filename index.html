@@ -146,6 +146,7 @@ input[type="number"]{
 <h1>🕵️ Juego del Espía</h1>
 
 <!-- CONFIG 1 -->
+
 <div id="config1" class="pantalla" style="display:block;">
 <h2>Cantidad</h2>
 
@@ -162,8 +163,10 @@ Impostores:
 
 <button onclick="playClick(); irACategorias()">Continuar</button>
 <p id="errorConfig" style="color:yellow;"></p>
-</div>
 
+<button onclick="playClick(); abrirBeta()">Mensaje Beta</button>
+</div>
+ 
 <!-- CATEGORIAS -->
 <div id="configCategorias" class="pantalla">
   <h2>Selecciona Categorías</h2>
@@ -204,6 +207,28 @@ Impostores:
 <button id="btnSeguir" onclick="playClick(); seguirJuego()">
     Seguir Jugando
 </button>
+</div>
+
+<!-- MENSAJE BETA -->
+<div id="pantallaBeta" class="pantalla">
+
+  <h2>VERSIÓN BETA</h2>
+
+  <p id="textoBeta">
+    <!-- ✏️ ACÁ ESCRIBÍ TU MENSAJE -->
+
+    Muchas gracias por probar la versión beta de la aplicación.
+
+    Si encontrás errores o tenés sugerencias,
+    podés contactarte conmigo al siguiente correo:
+
+    sugerencias.juegoespia@gmail.com
+
+  </p>
+
+  <br>
+  <button onclick="playClick(); cerrarBeta()">Volver</button>
+
 </div>
 
 <script>
@@ -1182,18 +1207,6 @@ function playDerrota(){
     audio.play();
 }
 
-function playBien(){
-    const audio = document.getElementById("victoriaSound");
-    audio.currentTime = 0;
-    audio.play();
-}
-
-function playMal(){
-    const audio = document.getElementById("derrotaSound");
-    audio.currentTime = 0;
-    audio.play();
-}
-
 function iniciarMusica(){
     const musica = document.getElementById("musicaFondo");
     musica.volume = 0.4; // volumen 40%
@@ -1205,12 +1218,26 @@ function detenerMusica(){
     musica.pause();
     musica.currentTime = 0; // vuelve al inicio
 }
+
+function abrirBeta(){
+
+       document.getElementById("config1").style.display="none";
+
+   
+    document.getElementById("pantallaBeta").style.display="block";
+
+}
+
+function cerrarBeta(){
+
+    document.getElementById("pantallaBeta").style.display="none";
+    document.getElementById("config1").style.display="block";
+
+}
 </script> 
 <audio id="clickSound" src="click.mp3" preload="auto"></audio>
 <audio id="victoriaSound" src="victoria.mp3" preload="auto"></audio>
 <audio id="derrotaSound" src="derrota.mp3" preload="auto"></audio>
-<audio id="bienSound" src="bien.mp3" preload="auto"></audio>
-<audio id="malSound" src="mal.mp3" preload="auto"></audio> 
 <audio id="musicaFondo" src="fondo.mp3" preload="auto"></audio>
 </div>
 </body>  
